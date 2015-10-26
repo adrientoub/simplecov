@@ -169,16 +169,28 @@ module SimpleCov
     # as skipped.
     def process_skipped_lines!
       skipping = false
+      skipping_swagger = false
       lines.each do |line|
+        skipping_swagger = match_swagger_line(line, skipping_swagger)
+
         if line.src =~ /^([\s]*)#([\s]*)(\:#{SimpleCov.nocov_token}\:)/
           skipping = !skipping
         else
-          line.skipped! if skipping
+          line.skipped! if skipping || skipping_swagger
         end
       end
     end
 
   private
+
+    def match_swagger_line(line, skipping_swagger)
+      if line.src =~ /swagger_api/
+        return true
+      elsif line.src =~ /^  end$/
+        return false
+      end
+      skipping_swagger
+    end
 
     # ruby 1.9 could use Float#round(places) instead
     # @return [Float]
