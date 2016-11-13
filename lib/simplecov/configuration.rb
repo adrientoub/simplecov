@@ -28,6 +28,7 @@ module SimpleCov
     #
     def coverage_dir(dir = nil)
       return @coverage_dir if defined?(@coverage_dir) && dir.nil?
+      @coverage_path = nil # invalidate cache
       @coverage_dir = (dir || "coverage")
     end
 
@@ -37,9 +38,21 @@ module SimpleCov
     # values. Will create the directory if it's missing
     #
     def coverage_path
-      coverage_path = File.expand_path(coverage_dir, root)
-      FileUtils.mkdir_p coverage_path
-      coverage_path
+      @coverage_path ||= begin
+        coverage_path = File.expand_path(coverage_dir, root)
+        FileUtils.mkdir_p coverage_path
+        coverage_path
+      end
+    end
+
+    #
+    # Coverage results will always include files matched by this glob, whether
+    # or not they were explicitly required. Without this, un-required files
+    # will not be present in the final report.
+    #
+    def track_files(glob = nil)
+      return @track_files if defined?(@track_files) && glob.nil?
+      @track_files = glob
     end
 
     #
@@ -72,7 +85,7 @@ module SimpleCov
     def formatter(formatter = nil)
       return @formatter if defined?(@formatter) && formatter.nil?
       @formatter = formatter
-      fail "No formatter configured. Please specify a formatter using SimpleCov.formatter = SimpleCov::Formatter::SimpleFormatter" unless @formatter
+      raise "No formatter configured. Please specify a formatter using SimpleCov.formatter = SimpleCov::Formatter::SimpleFormatter" unless @formatter
       @formatter
     end
 
@@ -105,7 +118,7 @@ module SimpleCov
       return @nocov_token if defined?(@nocov_token) && nocov_token.nil?
       @nocov_token = (nocov_token || "nocov")
     end
-    alias_method :skip_token, :nocov_token
+    alias skip_token nocov_token
 
     #
     # Returns the configured groups. Add groups using SimpleCov.add_group
@@ -191,7 +204,7 @@ module SimpleCov
     # Configure with SimpleCov.merge_timeout(3600) # 1hr
     #
     def merge_timeout(seconds = nil)
-      @merge_timeout = seconds if seconds.is_a?(Fixnum)
+      @merge_timeout = seconds if seconds.is_a?(Integer)
       @merge_timeout ||= 600
     end
 
@@ -276,7 +289,7 @@ module SimpleCov
       elsif filter_argument.is_a?(Array)
         SimpleCov::ArrayFilter.new(filter_argument)
       else
-        fail ArgumentError, "Please specify either a string or a block to filter with"
+        raise ArgumentError, "Please specify either a string or a block to filter with"
       end
     end
   end

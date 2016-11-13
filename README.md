@@ -1,4 +1,4 @@
-SimpleCov [![Build Status](https://secure.travis-ci.org/colszowka/simplecov.png)][Continuous Integration] [![Dependency Status](https://gemnasium.com/colszowka/simplecov.png)][Dependencies] [![Code Climate](https://codeclimate.com/github/colszowka/simplecov.png)](https://codeclimate.com/github/colszowka/simplecov) [![Inline docs](http://inch-ci.org/github/colszowka/simplecov.png)](http://inch-ci.org/github/colszowka/simplecov)
+SimpleCov [![Build Status](https://travis-ci.org/colszowka/simplecov.svg)][Continuous Integration] [![Dependency Status](https://gemnasium.com/colszowka/simplecov.svg)][Dependencies] [![Code Climate](https://codeclimate.com/github/colszowka/simplecov.svg)](https://codeclimate.com/github/colszowka/simplecov) [![Inline docs](http://inch-ci.org/github/colszowka/simplecov.svg)](http://inch-ci.org/github/colszowka/simplecov)
 =========
 **Code coverage for Ruby**
 
@@ -6,10 +6,7 @@ SimpleCov [![Build Status](https://secure.travis-ci.org/colszowka/simplecov.png)
   * [API documentation]
   * [Changelog]
   * [Rubygem]
-  * [Mailing List]
   * [Continuous Integration]
-
-**Important Notice: There is a bug that affects exit code handling on the 0.8 line of SimpleCov, see [#281](https://github.com/colszowka/simplecov/issues/281). Please use versions `>= 0.9` to avoid this.**
 
 [Coverage]: http://www.ruby-doc.org/stdlib-2.1.0/libdoc/coverage/rdoc/Coverage.html "API doc for Ruby's Coverage library"
 [Source Code]: https://github.com/colszowka/simplecov "Source Code @ GitHub"
@@ -20,10 +17,6 @@ SimpleCov [![Build Status](https://secure.travis-ci.org/colszowka/simplecov.png)
 [Continuous Integration]: http://travis-ci.org/colszowka/simplecov "SimpleCov is built around the clock by travis-ci.org"
 [Dependencies]: https://gemnasium.com/colszowka/simplecov "SimpleCov dependencies on Gemnasium"
 [simplecov-html]: https://github.com/colszowka/simplecov-html "SimpleCov HTML Formatter Source Code @ GitHub"
-[Mailing List]: https://groups.google.com/forum/#!forum/simplecov "Open mailing list for discussion and announcements on Google Groups"
-[Pledgie]: http://www.pledgie.com/campaigns/18379
-
-[![You can support the development of SimpleCov via Pledgie - thanks for your help](https://pledgie.com/campaigns/18379.png?skin_name=chrome)][Pledgie]
 
 SimpleCov is a code coverage analysis tool for Ruby. It uses [Ruby's built-in Coverage][Coverage] library to gather code
 coverage data, but makes processing its results much easier by providing a clean API to filter, group, merge, format,
@@ -108,12 +101,12 @@ Getting started
 
 **Coverage results report, fully browsable locally with sorting and much more:**
 
-![SimpleCov coverage report](http://colszowka.github.com/simplecov/devise_result-0.5.3.png)
+![SimpleCov coverage report](https://cloud.githubusercontent.com/assets/137793/17071162/db6f253e-502d-11e6-9d84-e40c3d75f333.png)
 
 
 **Source file coverage details view:**
 
-![SimpleCov source file detail view](http://colszowka.github.com/simplecov/devise_source_file-0.5.3.png)
+![SimpleCov source file detail view](https://cloud.githubusercontent.com/assets/137793/17071163/db6f9f0a-502d-11e6-816c-edb2c66fad8d.png)
 
 ## Use it with any framework!
 
@@ -151,19 +144,6 @@ to use SimpleCov with them. Here's an overview of the known ones:
     <td>
       <a href="https://github.com/colszowka/simplecov/issues/64">#64</a> &amp;
       <a href="https://github.com/colszowka/simplecov/pull/185">#185</a>
-    </td>
-  </tr>
-  <tr>
-    <th>
-      Riot
-    </th>
-    <td>
-      A user has reported problems with the coverage report using the riot
-      framework. If you experience similar trouble please follow up on the
-      related GitHub issue.
-    </td>
-    <td>
-      <a href="https://github.com/colszowka/simplecov/issues/80">#80</a>
     </td>
   </tr>
   <tr>

@@ -1,11 +1,60 @@
-Unreleased ([changes](https://github.com/colszowka/simplecov/compare/v0.10.0...master))
+Unreleased ([changes](https://github.com/colszowka/simplecov/compare/v0.12.0...master))
+==========
+
+## Enhancements
+
+## Bugfixes
+
+0.12.0 2016-07-02 ([changes](https://github.com/colszowka/simplecov/compare/v0.11.2...v0.12.0))
+=================
+
+## Enhancements
+
+* Add support for JSON versions 2.x
+
+## Bugfixes
+
+* Fix coverage rate of the parallel_tests. See [#441](https://github.com/colszowka/simplecov/pull/441) (thanks @sinsoku)
+* Fix a regression on old rubies that failed to work with the recently introduced frozen VERSION string. See [#461](https://github.com/colszowka/simplecov/pull/461) (thanks @leafle)
+
+0.11.2 2016-02-03 ([changes](https://github.com/colszowka/simplecov/compare/v0.11.1...v0.11.2))
+=================
+
+## Enhancements
+
+* Do not globally pollute Array and Hash with `merge_resultset` utility methods. See [#449](https://github.com/colszowka/simplecov/pull/449) (thanks @amatsuda)
+* Do not `mkdir_p` the `coverage_path` on every access of the method (See [#453](https://github.com/colszowka/simplecov/pull/453) (thanks @paddor)
+* Fixes a Ruby warning related to the `track_files` configuration. See [#447](https://github.com/colszowka/simplecov/pull/447) (thanks @craiglittle)
+* Add a group for background jobs to default Rails profile. See [#442](https://github.com/colszowka/simplecov/pull/442) (thanks @stve)
+
+## Bugfixes
+
+* Fix root_filter evaluates SimpleCov.root before initialization. See [#437](https://github.com/colszowka/simplecov/pull/437) (thanks @tmtm)
+
+0.11.1 2015-12-01 ([changes](https://github.com/colszowka/simplecov/compare/v0.11.0...v0.11.1))
 =================
 
 ## Enhancements
 
 ## Bugfixes
 
-0.10.0 2015-04-18 ([changes](https://github.com/colszowka/simplecov/compare/v0.9.2...0.10.0))
+* Fixed regression in `MultiFormatter.[]` with multiple arguments. See [#431](https://github.com/colszowka/simplecov/pull/431) (thanks @dillondrobena)
+
+0.11.0 2015-11-29 ([changes](https://github.com/colszowka/simplecov/compare/v0.10.0...v0.11.0))
+=================
+
+## Enhancements
+
+* Added `SimpleCov.minimum_coverage_by_file` for per-file coverage thresholds. See [#392](https://github.com/colszowka/simplecov/pull/392) (thanks @ptashman)
+* Added `track_files` configuration option to specify a glob to always include in coverage results, whether or not those files are required. By default, this is enabled in the Rails profile for common Rails directories. See [#422](https://github.com/colszowka/simplecov/pull/422) (thanks @hugopeixoto)
+* Speed up `root_filter` by an order of magnitude. See [#396](https://github.com/colszowka/simplecov/pull/396) (thanks @raszi)
+
+## Bugfixes
+
+* Fix warning about global variable `$ERROR_INFO`. See [#400](https://github.com/colszowka/simplecov/pull/400) (thanks @amatsuda)
+* Actually recurse upward looking for `.simplecov`, as claimed by the documentation, rather than only the working directory. See [#423](https://github.com/colszowka/simplecov/pull/423) (thanks @alexdowad)
+
+0.10.0 2015-04-18 ([changes](https://github.com/colszowka/simplecov/compare/v0.9.2...v0.10.0))
 =================
 
 ## Enhancements

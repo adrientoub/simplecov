@@ -2,13 +2,18 @@
 # Code coverage for ruby 1.9. Please check out README for a full introduction.
 #
 # Coverage may be inaccurate under JRUBY.
-if defined?(JRUBY_VERSION)
-  if ENV["JRUBY_OPTS"].to_s !~ /-Xcli.debug=true/
-    warn "Coverage may be inaccurate; Try setting JRUBY_OPTS=\"-Xcli.debug=true --debug\""
-    # see https://github.com/metricfu/metric_fu/pull/226
-    #     https://github.com/jruby/jruby/issues/1196
-    #     https://jira.codehaus.org/browse/JRUBY-6106
-    #     https://github.com/colszowka/simplecov/issues/86
+if defined?(JRUBY_VERSION) && defined?(JRuby)
+
+  # @see https://github.com/jruby/jruby/issues/1196
+  # @see https://github.com/metricfu/metric_fu/pull/226
+  # @see https://github.com/colszowka/simplecov/issues/420
+  # @see https://github.com/colszowka/simplecov/issues/86
+  # @see https://jira.codehaus.org/browse/JRUBY-6106
+
+  unless org.jruby.RubyInstanceConfig.FULL_TRACE_ENABLED
+    warn 'Coverage may be inaccurate; set the "--debug" command line option,' \
+      ' or do JRUBY_OPTS="--debug"' \
+      ' or set the "debug.fullTrace=true" option in your .jrubyrc'
   end
 end
 module SimpleCov
@@ -49,18 +54,43 @@ module SimpleCov
     end
 
     #
+    # Finds files that were to be tracked but were not loaded and initializes
+    # their coverage to zero.
+    #
+    def add_not_loaded_files(result)
+      if track_files
+        result = result.dup
+        Dir[track_files].each do |file|
+          absolute = File.expand_path(file)
+
+          result[absolute] ||= [0] * File.foreach(absolute).count
+        end
+      end
+
+      result
+    end
+
+    #
     # Returns the result for the current coverage run, merging it across test suites
     # from cache using SimpleCov::ResultMerger if use_merging is activated (default)
     #
     def result
-      @result ||= SimpleCov::Result.new(Coverage.result) if running
+      # Ensure the variable is defined to avoid ruby warnings
+      @result = nil unless defined?(@result)
+
+      # Collect our coverage result
+      if running && !result?
+        @result = SimpleCov::Result.new add_not_loaded_files(Coverage.result)
+      end
+
       # If we're using merging of results, store the current result
       # first, then merge the results and return those
       if use_merging
-        SimpleCov::ResultMerger.store_result(@result) if @result
-        return SimpleCov::ResultMerger.merged_result
+        SimpleCov::ResultMerger.store_result(@result) if result?
+
+        SimpleCov::ResultMerger.merged_result
       else
-        return @result if defined? @result
+        @result
       end
     ensure
       self.running = false
@@ -95,7 +125,7 @@ module SimpleCov
         grouped[name] = SimpleCov::FileList.new(files.select { |source_file| filter.matches?(source_file) })
         grouped_files += grouped[name]
       end
-      if groups.length > 0 && (other_files = files.reject { |source_file| grouped_files.include?(source_file) }).length > 0
+      if !groups.empty? && !(other_files = files.reject { |source_file| grouped_files.include?(source_file) }).empty?
         grouped["Ungrouped"] = SimpleCov::FileList.new(other_files)
       end
       grouped

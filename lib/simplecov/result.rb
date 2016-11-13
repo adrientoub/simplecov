@@ -12,7 +12,7 @@ module SimpleCov
     attr_reader :original_result
     # Returns all files that are applicable to this result (sans filters!) as instances of SimpleCov::SourceFile. Aliased as :source_files
     attr_reader :files
-    alias_method :source_files, :files
+    alias source_files files
     # Explicitly set the Time this result has been created
     attr_writer :created_at
     # Explicitly set the command name that was used for this coverage result. Defaults to SimpleCov.command_name
@@ -24,6 +24,7 @@ module SimpleCov
     # Initialize a new SimpleCov::Result from given Coverage.result (a Hash of filenames each containing an array of
     # coverage data)
     def initialize(original_result)
+      original_result = original_result.dup.extend(SimpleCov::HashMergeHelper) unless original_result.is_a? SimpleCov::HashMergeHelper
       @original_result = original_result.freeze
       @files = SimpleCov::FileList.new(original_result.map do |filename, coverage|
         SimpleCov::SourceFile.new(filename, coverage) if File.file?(filename)
@@ -59,7 +60,7 @@ module SimpleCov
 
     # Returns a hash representation of this Result that can be used for marshalling it into JSON
     def to_hash
-      {command_name => {"coverage" => original_result.reject { |filename, _| !filenames.include?(filename) }, "timestamp" => created_at.to_i}}
+      {command_name => {"coverage" => coverage, "timestamp" => created_at.to_i}}
     end
 
     # Loads a SimpleCov::Result#to_hash dump
@@ -72,6 +73,11 @@ module SimpleCov
     end
 
   private
+
+    def coverage
+      keys = original_result.keys & filenames
+      Hash[keys.zip(original_result.values_at(*keys))]
+    end
 
     # Applies all configured SimpleCov filters on this result's source files
     def filter!

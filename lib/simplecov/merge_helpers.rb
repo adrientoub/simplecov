@@ -4,13 +4,12 @@ module SimpleCov
     def merge_resultset(array)
       new_array = dup
       array.each_with_index do |element, i|
-        if element.nil? && new_array[i].nil?
-          new_array[i] = nil
-        else
-          local_value = element || 0
-          other_value = new_array[i] || 0
-          new_array[i] = local_value + other_value
-        end
+        pair = [element, new_array[i]]
+        new_array[i] = if pair.any?(&:nil?) && pair.map(&:to_i).all?(&:zero?)
+                         nil
+                       else
+                         element.to_i + new_array[i].to_i
+                       end
       end
       new_array
     end
@@ -23,16 +22,16 @@ module SimpleCov
     def merge_resultset(hash)
       new_resultset = {}
       (keys + hash.keys).each do |filename|
-        new_resultset[filename] = []
+        new_resultset[filename] = nil
       end
 
       new_resultset.each_key do |filename|
-        new_resultset[filename] = (self[filename] || []).merge_resultset(hash[filename] || [])
+        result1 = self[filename]
+        result2 = hash[filename]
+        new_resultset[filename] =
+          (result1 && result2) ? result1.extend(ArrayMergeHelper).merge_resultset(result2) : (result1 || result2).dup
       end
       new_resultset
     end
   end
 end
-
-Array.send :include, SimpleCov::ArrayMergeHelper
-Hash.send :include, SimpleCov::HashMergeHelper

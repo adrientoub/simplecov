@@ -1,10 +1,12 @@
 # Load default formatter gem
 require "simplecov-html"
+require "pathname"
 
 SimpleCov.profiles.define "root_filter" do
   # Exclude all files outside of simplecov root
-  root_filter = /\A#{Regexp.escape(SimpleCov.root)}/io
+  root_filter = nil
   add_filter do |src|
+    root_filter ||= /\A#{Regexp.escape(SimpleCov.root)}/io
     !(src.filename =~ root_filter)
   end
 end
@@ -30,7 +32,10 @@ SimpleCov.profiles.define "rails" do
   add_group "Models", "app/models"
   add_group "Mailers", "app/mailers"
   add_group "Helpers", "app/helpers"
+  add_group "Jobs", %w(app/jobs app/workers)
   add_group "Libraries", "lib"
+
+  track_files "{app,lib}/**/*.rb"
 end
 
 # Default configuration
@@ -48,15 +53,16 @@ at_exit do
   # If we are in a different process than called start, don't interfere.
   next if SimpleCov.pid != Process.pid
 
-  if $! # was an exception thrown?
-    # if it was a SystemExit, use the accompanying status
-    # otherwise set a non-zero status representing termination by some other exception
-    # (see github issue 41)
-    @exit_status = $!.is_a?(SystemExit) ? $!.status : SimpleCov::ExitCodes::EXCEPTION
-  else
-    # Store the exit status of the test run since it goes away after calling the at_exit proc...
-    @exit_status = SimpleCov::ExitCodes::SUCCESS
-  end
+  @exit_status = if $! # was an exception thrown?
+                   # if it was a SystemExit, use the accompanying status
+                   # otherwise set a non-zero status representing termination by
+                   # some other exception (see github issue 41)
+                   $!.is_a?(SystemExit) ? $!.status : SimpleCov::ExitCodes::EXCEPTION
+                 else
+                   # Store the exit status of the test run since it goes away
+                   # after calling the at_exit proc...
+                   SimpleCov::ExitCodes::SUCCESS
+                 end
 
   SimpleCov.at_exit.call
 
@@ -97,5 +103,20 @@ if home_dir
 end
 
 # Autoload config from .simplecov if present
-config_path = File.join(SimpleCov.root, ".simplecov")
-load config_path if File.exist?(config_path)
+# Recurse upwards until we find .simplecov or reach the root directory
+
+config_path = Pathname.new(SimpleCov.root)
+loop do
+  filename = config_path.join(".simplecov")
+  if filename.exist?
+    begin
+      load filename
+    rescue LoadError, StandardError
+      $stderr.puts "Warning: Error occurred while trying to load #{filename}. " \
+        "Error message: #{$!.message}"
+    end
+    break
+  end
+  config_path, = config_path.split
+  break if config_path.root?
+end
