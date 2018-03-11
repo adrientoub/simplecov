@@ -20,10 +20,20 @@ A formatter that generates Cobertura XML.
 
 CSV formatter for SimpleCov
 
+#### [simplecov-erb](https://github.com/kpaulisse/simplecov-erb)
+*by [Kevin Paulisse](https://github.com/kpaulisse)*
+
+Flexible formatter that generates the output from an ERB template.
+
 #### [simplecov-json](https://github.com/vicentllongo/simplecov-json)
 *by Vicent Llongo*
 
 JSON formatter for SimpleCov
+
+#### [simplecov-lcov](https://github.com/fortissimo1997/simplecov-lcov)
+*by fortissimo1997*
+
+lcov formatter for SimpleCov
 
 #### [simplecov-rcov](https://github.com/fguillen/simplecov-rcov)
 *by Fernando Guillen*
@@ -34,3 +44,8 @@ JSON formatter for SimpleCov
 *by [Michael Grosser](http://grosser.it)*
 
 A formatter that prints the coverage of the file under test when you run a single test file.
+
+#### [simplecov-t_wada](https://github.com/ysksn/simplecov-t_wada)
+*by [Yosuke Kabuto](https://github.com/ysksn)*
+
+t_wada AA formatter for SimpleCov

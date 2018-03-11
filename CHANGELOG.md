@@ -1,9 +1,79 @@
-Unreleased ([changes](https://github.com/colszowka/simplecov/compare/v0.12.0...master))
+unreleased
 ==========
 
 ## Enhancements
 
+* Relax version constraint on `docile`, per SemVer
+* exception that occurred on exit is available as `exit_exception`! See [#639](https://github.com/colszowka/simplecov/pull/639)  (thanks @thomas07vt)
+* Performance: processing results now runs from 2.5x to 3.75x faster. See [#662](https://github.com/colszowka/simplecov/pull/662) (thanks @BMorearty & @eregon)
+
 ## Bugfixes
+
+* (breaking) Stop handling string filters as regular expressions, use the dedicated regex filter if you need that behaviour. See [#616](https://github.com/colszowka/simplecov/pull/616) (thanks @yujinakayama)
+* Avoid overwriting the last coverage results on unsuccessful test runs. See [#625](https://github.com/colszowka/simplecov/pull/625) (thanks @thomas07vt)
+* Don't crash on invalid UTF-8 byte sequences.
+
+0.15.1 (2017-09-11) ([changes](https://github.com/colszowka/simplecov/compare/v0.15.0...v0.15.1))
+=======
+
+## Bugfixes
+
+* Filter directories outside SimpleCov.root that have it as a prefix. See [#617](https://github.com/colszowka/simplecov/pull/617) (thanks @jenseng)
+* Fix standard rails profile rails filter (didn't work). See [#618](https://github.com/colszowka/simplecov/pull/618) (thanks @jenseng again!)
+
+0.15.0 (2017-08-14) ([changes](https://github.com/colszowka/simplecov/compare/v0.14.1...v0.15.0))
+=======
+
+## Enhancements
+
+* Ability to use regex filters for removing files from the output. See [#589](https://github.com/colszowka/simplecov/pull/589) (thanks @jsteel)
+
+## Bugfixes
+
+* Fix merging race condition when running tests in parallel and merging them. See [#570](https://github.com/colszowka/simplecov/pull/570) (thanks @jenseng)
+* Fix relevant lines for unloaded files - comments, skipped code etc. are correctly classified as irrelevant. See [#605](https://github.com/colszowka/simplecov/pull/605) (thanks @odlp)
+* Allow using simplecov with frozen-string-literals enabled. See [#590](https://github.com/colszowka/simplecov/pull/590) (thanks @pat)
+* Make sure Array Filter can use all other filter types. See [#589](https://github.com/colszowka/simplecov/pull/589) (thanks @jsteel)
+* Make sure file names use `Simplecov.root` as base avoiding using full absolute project paths. See [#589](https://github.com/colszowka/simplecov/pull/589) (thanks @jsteel)
+
+0.14.1 2017-03-18 ([changes](https://github.com/colszowka/simplecov/compare/v0.14.0...v0.14.1))
+========
+
+## Bugfixes
+
+* Files that were skipped as a whole/had no relevant coverage could lead to Float errors. See [#564](https://github.com/colszowka/simplecov/pull/564) (thanks to @stevehanson for the report in [#563](https://github.com/colszowka/simplecov/issues/563))
+
+0.14.0 2017-03-15 ([changes](https://github.com/colszowka/simplecov/compare/v0.13.0...v0.14.0))
+==========
+
+## Enhancements
+
+* Officially support JRuby 9.1+ going forward (should also work with previous releases). See [#547](https://github.com/colszowka/simplecov/pull/547) (ping @PragTob when encountering issues)
+* Add Channel group to Rails profile, when `ActionCable` is loaded. See [#492](https://github.com/colszowka/simplecov/pull/492) (thanks @BenMorganIO)
+* Stop `extend`ing instances of `Array` and `Hash` during merging results avoiding problems frozen results while manually merging results. See [#558](https://github.com/colszowka/simplecov/pull/558) (thanks @aroben)
+
+## Bugfixes
+
+* Fix parallel_tests when a thread ends up running no tests. See [#533](https://github.com/colszowka/simplecov/pull/533) (thanks @cshaffer)
+* Skip the `:nocov:` comments along with the code that they skip. See [#551](https://github.com/colszowka/simplecov/pull/551) (thanks @ebiven)
+* Fix crash when Home environment variable is unset. See [#482](https://github.com/colszowka/simplecov/pull/482) (thanks @waldyr)
+* Make track_files work again when explicitly setting it to nil. See [#463](https://github.com/colszowka/simplecov/pull/463) (thanks @craiglittle)
+* Do not overwrite .last_run.json file when refuse_coverage_drop option is enabled and the coverage has dropped (lead to you being able to just rerun tests and everything was _fine_). See [#553](https://github.com/colszowka/simplecov/pull/553) (thanks @Miloshes)
+
+0.13.0 2017-01-25 ([changes](https://github.com/colszowka/simplecov/compare/v0.12.0...v0.13.0))
+==========
+
+## Enhancements
+
+* Faster run times when a very large number of files is loaded into SimpleCov. See [#520](https://github.com/colszowka/simplecov/pull/520) (thanks @alyssais)
+* Only read in source code files that are actually used (faster when files are ignored etc.). See [#540](https://github.com/colszowka/simplecov/pull/540) (thanks @yui-knk)
+
+## Bugfixes
+
+* Fix merging of resultsets if a file is missing on one side. See [#513](https://github.com/colszowka/simplecov/pull/513) (thanks @hanazuki)
+* Fix Ruby 2.4 deprecation warnings by using Integer instead of Fixnum. See [#523](https://github.com/colszowka/simplecov/pull/523) (thanks @nobu)
+* Force Ruby 2 to json 2. See [dc7417d50](https://github.com/colszowka/simplecov/commit/dc7417d5049b1809cea214314c15dd93a5dd964f) (thanks @amatsuda)
+* Various other gem dependency fixes for different gems on different ruby versions. (thanks @amatsuda)
 
 0.12.0 2016-07-02 ([changes](https://github.com/colszowka/simplecov/compare/v0.11.2...v0.12.0))
 =================
@@ -224,7 +294,7 @@ has been added.
   * Average hits per line for groups of files is now computed correctly.
     See [#192](http://github.com/colszowka/simplecov/pull/192) and
     [#179](http://github.com/colszowka/simplecov/issues/179) (thanks to @graysonwright)
-  * Compatability with BINARY internal encoding.
+  * Compatibility with BINARY internal encoding.
     See [#194](https://github.com/colszowka/simplecov/pull/194) and
     [#127](https://github.com/colszowka/simplecov/issues/127) (thanks to @justfalter)
   * Special characters in `SimpleCov.root` are now correctly escaped before being used as a RegExp.

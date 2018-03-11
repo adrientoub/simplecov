@@ -1,3 +1,7 @@
+# frozen_string_literal: true
+
+require "English"
+
 #
 # Code coverage for ruby 1.9. Please check out README for a full introduction.
 #
@@ -20,6 +24,7 @@ module SimpleCov
   class << self
     attr_accessor :running
     attr_accessor :pid
+    attr_reader :exit_exception
 
     #
     # Sets up SimpleCov to run against your project.
@@ -55,15 +60,15 @@ module SimpleCov
 
     #
     # Finds files that were to be tracked but were not loaded and initializes
-    # their coverage to zero.
+    # the line-by-line coverage to zero (if relevant) or nil (comments / whitespace etc).
     #
     def add_not_loaded_files(result)
-      if track_files
+      if tracked_files
         result = result.dup
-        Dir[track_files].each do |file|
+        Dir[tracked_files].each do |file|
           absolute = File.expand_path(file)
 
-          result[absolute] ||= [0] * File.foreach(absolute).count
+          result[absolute] ||= LinesClassifier.new.classify(File.foreach(absolute))
         end
       end
 
@@ -75,23 +80,21 @@ module SimpleCov
     # from cache using SimpleCov::ResultMerger if use_merging is activated (default)
     #
     def result
-      # Ensure the variable is defined to avoid ruby warnings
-      @result = nil unless defined?(@result)
+      return @result if result?
 
       # Collect our coverage result
-      if running && !result?
+      if running
         @result = SimpleCov::Result.new add_not_loaded_files(Coverage.result)
       end
 
       # If we're using merging of results, store the current result
-      # first, then merge the results and return those
+      # first (if there is one), then merge the results and return those
       if use_merging
         SimpleCov::ResultMerger.store_result(@result) if result?
-
-        SimpleCov::ResultMerger.merged_result
-      else
-        @result
+        @result = SimpleCov::ResultMerger.merged_result
       end
+
+      @result
     ensure
       self.running = false
     end
@@ -158,6 +161,99 @@ module SimpleCov
         false
       end
     end
+
+    #
+    # Clear out the previously cached .result. Primarily useful in testing
+    #
+    def clear_result
+      @result = nil
+    end
+
+    #
+    # Capture the current exception if it exists
+    # This will get called inside the at_exit block
+    #
+    def set_exit_exception
+      @exit_exception = $ERROR_INFO
+    end
+
+    #
+    # Returns the exit status from the exit exception
+    #
+    def exit_status_from_exception
+      return SimpleCov::ExitCodes::SUCCESS unless exit_exception
+
+      if exit_exception.is_a?(SystemExit)
+        exit_exception.status
+      else
+        SimpleCov::ExitCodes::EXCEPTION
+      end
+    end
+
+    # @api private
+    #
+    # Called from at_exit block
+    #
+    def run_exit_tasks!
+      exit_status = SimpleCov.exit_status_from_exception
+
+      SimpleCov.at_exit.call
+
+      exit_status = SimpleCov.process_result(SimpleCov.result, exit_status)
+
+      # Force exit with stored status (see github issue #5)
+      # unless it's nil or 0 (see github issue #281)
+      Kernel.exit exit_status if exit_status && exit_status > 0
+    end
+
+    # @api private
+    #
+    # Usage:
+    #   exit_status = SimpleCov.process_result(SimpleCov.result, exit_status)
+    #
+    def process_result(result, exit_status)
+      return exit_status unless SimpleCov.result? # Result has been computed
+      return exit_status if exit_status != SimpleCov::ExitCodes::SUCCESS # Existing errors
+
+      covered_percent = result.covered_percent.round(2)
+      result_exit_status = result_exit_status(result, covered_percent)
+      if result_exit_status == SimpleCov::ExitCodes::SUCCESS # No result errors
+        write_last_run(covered_percent)
+      end
+      result_exit_status
+    end
+
+    # @api private
+    #
+    # rubocop:disable Metrics/MethodLength
+    def result_exit_status(result, covered_percent)
+      covered_percentages = result.covered_percentages.map { |percentage| percentage.round(2) }
+      if covered_percent < SimpleCov.minimum_coverage
+        $stderr.printf("Coverage (%.2f%%) is below the expected minimum coverage (%.2f%%).\n", covered_percent, SimpleCov.minimum_coverage)
+        SimpleCov::ExitCodes::MINIMUM_COVERAGE
+      elsif covered_percentages.any? { |p| p < SimpleCov.minimum_coverage_by_file }
+        $stderr.printf("File (%s) is only (%.2f%%) covered. This is below the expected minimum coverage per file of (%.2f%%).\n", result.least_covered_file, covered_percentages.min, SimpleCov.minimum_coverage_by_file)
+        SimpleCov::ExitCodes::MINIMUM_COVERAGE
+      elsif (last_run = SimpleCov::LastRun.read)
+        coverage_diff = last_run["result"]["covered_percent"] - covered_percent
+        if coverage_diff > SimpleCov.maximum_coverage_drop
+          $stderr.printf("Coverage has dropped by %.2f%% since the last time (maximum allowed: %.2f%%).\n", coverage_diff, SimpleCov.maximum_coverage_drop)
+          SimpleCov::ExitCodes::MAXIMUM_COVERAGE_DROP
+        else
+          SimpleCov::ExitCodes::SUCCESS
+        end
+      else
+        SimpleCov::ExitCodes::SUCCESS
+      end
+    end
+    # rubocop:enable Metrics/MethodLength
+
+    #
+    # @api private
+    #
+    def write_last_run(covered_percent)
+      SimpleCov::LastRun.write(:result => {:covered_percent => covered_percent})
+    end
   end
 end
 
@@ -172,7 +268,8 @@ require "simplecov/result"
 require "simplecov/filter"
 require "simplecov/formatter"
 require "simplecov/last_run"
-require "simplecov/merge_helpers"
+require "simplecov/lines_classifier"
+require "simplecov/raw_coverage"
 require "simplecov/result_merger"
 require "simplecov/command_guesser"
 require "simplecov/version"

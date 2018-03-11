@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "fileutils"
 require "docile"
 require "simplecov/formatter/multi_formatter"
@@ -50,9 +52,16 @@ module SimpleCov
     # or not they were explicitly required. Without this, un-required files
     # will not be present in the final report.
     #
-    def track_files(glob = nil)
-      return @track_files if defined?(@track_files) && glob.nil?
-      @track_files = glob
+    def track_files(glob)
+      @tracked_files = glob
+    end
+
+    #
+    # Returns the glob that will be used to include files that were not
+    # explicitly required.
+    #
+    def tracked_files
+      @tracked_files if defined?(@tracked_files)
     end
 
     #
@@ -143,9 +152,9 @@ module SimpleCov
     # Allows you to configure simplecov in a block instead of prepending SimpleCov to all config methods
     # you're calling.
     #
-    # SimpleCov.configure do
-    #   add_filter 'foobar'
-    # end
+    #     SimpleCov.configure do
+    #       add_filter 'foobar'
+    #     end
     #
     # This is equivalent to SimpleCov.add_filter 'foobar' and thus makes it easier to set a bunch of configure
     # options at once.
@@ -161,10 +170,11 @@ module SimpleCov
     # By default, it will call SimpleCov.result.format!
     #
     # Configure with:
-    #   SimpleCov.at_exit do
-    #     puts "Coverage done"
-    #     SimpleCov.result.format!
-    #   end
+    #
+    #     SimpleCov.at_exit do
+    #       puts "Coverage done"
+    #       SimpleCov.result.format!
+    #     end
     #
     def at_exit(&block)
       return proc {} unless running || block_given?
@@ -192,7 +202,7 @@ module SimpleCov
     end
 
     #
-    # Defines them maximum age (in seconds) of a resultset to still be included in merged results.
+    # Defines the maximum age (in seconds) of a resultset to still be included in merged results.
     # i.e. If you run cucumber features, then later rake test, if the stored cucumber resultset is
     # more seconds ago than specified here, it won't be taken into account when merging (and is also
     # purged from the resultset cache)
@@ -249,15 +259,18 @@ module SimpleCov
 
     #
     # Add a filter to the processing chain.
-    # There are three ways to define a filter:
+    # There are four ways to define a filter:
     #
     # * as a String that will then be matched against all source files' file paths,
-    #   SimpleCov.add_filter 'app/models' # will reject all your models
+    #     SimpleCov.add_filter 'app/models' # will reject all your models
     # * as a block which will be passed the source file in question and should either
     #   return a true or false value, depending on whether the file should be removed
-    #   SimpleCov.add_filter do |src_file|
-    #     File.basename(src_file.filename) == 'environment.rb'
-    #   end # Will exclude environment.rb files from the results
+    #     SimpleCov.add_filter do |src_file|
+    #       File.basename(src_file.filename) == 'environment.rb'
+    #     end # Will exclude environment.rb files from the results
+    # * as an array of strings that are matched against all sorce files' file
+    #   paths and then ignored (basically string filter multiple times)
+    #     SimpleCov.add_filter ['app/models', 'app/helpers'] # ignores both dirs
     # * as an instance of a subclass of SimpleCov::Filter. See the documentation there
     #   on how to define your own filter classes
     #
@@ -277,19 +290,15 @@ module SimpleCov
   private
 
     #
-    # The actal filter processor. Not meant for direct use
+    # The actual filter processor. Not meant for direct use
     #
     def parse_filter(filter_argument = nil, &filter_proc)
-      if filter_argument.is_a?(SimpleCov::Filter)
-        filter_argument
-      elsif filter_argument.is_a?(String)
-        SimpleCov::StringFilter.new(filter_argument)
-      elsif filter_proc
-        SimpleCov::BlockFilter.new(filter_proc)
-      elsif filter_argument.is_a?(Array)
-        SimpleCov::ArrayFilter.new(filter_argument)
+      filter = filter_argument || filter_proc
+
+      if filter
+        SimpleCov::Filter.build_filter(filter)
       else
-        raise ArgumentError, "Please specify either a string or a block to filter with"
+        raise ArgumentError, "Please specify either a filter or a block to filter with"
       end
     end
   end

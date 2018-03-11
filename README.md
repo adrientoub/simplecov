@@ -28,7 +28,7 @@ etc. SimpleCov automatically takes care of this by caching and merging results w
 report actually includes coverage across your test suites and thereby gives you a better picture of blank spots.
 
 The official formatter of SimpleCov is packaged as a separate gem called [simplecov-html], but will be installed and configured
-automatically when you launch SimpleCov. If you're curious, you can find it [on Github, too][simplecov-html].
+automatically when you launch SimpleCov. If you're curious, you can find it [on GitHub, too][simplecov-html].
 
 
 ## Contact
@@ -40,17 +40,17 @@ automatically when you launch SimpleCov. If you're curious, you can find it [on 
 
 *Questions, Problems, Suggestions, etc.*
 
-* [Mailing List]: https://groups.google.com/forum/#!forum/simplecov "Open mailing list for discussion and announcements on Google Groups"
+* [Mailing List](https://groups.google.com/forum/#!forum/simplecov) "Open mailing list for discussion and announcements on Google Groups"
 
 Getting started
 ---------------
 1. Add SimpleCov to your `Gemfile` and `bundle install`:
 
     ```ruby
-    gem 'simplecov', :require => false, :group => :test
+    gem 'simplecov', require: false, group: :test
     ```
 2. Load and launch SimpleCov **at the very top** of your `test/test_helper.rb`
-   (*or `spec_helper.rb`, cucumber `env.rb`, or whatever your preferred test
+   (*or `spec_helper.rb`, `rails_helper`, cucumber `env.rb`, or whatever your preferred test
    framework uses*):
 
     ```ruby
@@ -66,11 +66,12 @@ Getting started
     code is required!**
 
     SimpleCov must be running in the process that you want the code coverage
-    analysis to happen on. When testing a server process (i.e. a JSON API
-    endpoint) via a separate test process (i.e. when using Selenium) where you
+    analysis to happen on. When testing a server process (e.g. a JSON API
+    endpoint) via a separate test process (e.g. when using Selenium) where you
     want to see all code executed by the `rails server`, and not just code
     executed in your actual test files, you'll want to add something like this
-    to the top of `script/rails` (or `bin/rails` for Rails 4):
+    to the top of `script/rails` (or `bin/rails` for Rails 4), but below the
+    "shebang" line (`#! /usr/bin/env ruby`):
 
     ```ruby
     if ENV['RAILS_ENV'] == 'test'
@@ -79,6 +80,7 @@ Getting started
       puts "required simplecov"
     end
     ```
+
 3. Run your tests, open up `coverage/index.html` in your browser and check out
    what you've missed so far.
 4. Add the following to your `.gitignore` file to ensure that coverage results
@@ -131,6 +133,17 @@ to use SimpleCov with them. Here's an overview of the known ones:
 
 <table>
   <tr><th>Framework</th><th>Notes</th><th>Issue</th></tr>
+  <tr>
+    <th>
+      bootsnap
+    </th>
+    <td>
+      <a href="#want-to-use-bootsnap-with-simplecov">See section below.</a>
+    </td>
+    <td>
+      <a href="https://github.com/Shopify/bootsnap/issues/35">Shopify/bootsnap#35</a>
+    </td>
+  </tr>
   <tr>
     <th>
       parallel_tests
@@ -229,11 +242,11 @@ Please check out the [Configuration] API documentation to find out what you can 
 
 ## Using .simplecov for centralized config
 
-If you use SimpleCov to merge multiple test suite results (i.e. Test/Unit and Cucumber) into a single report, you'd normally have to
+If you use SimpleCov to merge multiple test suite results (e.g. Test/Unit and Cucumber) into a single report, you'd normally have to
 set up all your config options twice, once in `test_helper.rb` and once in `env.rb`.
 
 To avoid this, you can place a file called `.simplecov` in your project root. You can then just leave the `require 'simplecov'` in each
-test setup helper and move the `SimpleCov.start` code with all your custom config options into `.simplecov`:
+test setup helper (**at the top**) and move the `SimpleCov.start` code with all your custom config options into `.simplecov`:
 
 ```ruby
 # test/test_helper.rb
@@ -247,6 +260,7 @@ SimpleCov.start 'rails' do
   # any custom configs like groups and filters can be here at a central place
 end
 ```
+
 Using `.simplecov` rather than separately requiring SimpleCov multiple times is recommended if you are merging multiple test frameworks like Cucumber and RSpec that rely on each other, as invoking SimpleCov multiple times can cause coverage information to be lost.
 
 ## Filters
@@ -260,7 +274,7 @@ report.
 
 ### Defining custom filters
 
-You can currently define a filter using either a String (that will then be Regexp-matched against each source file's path),
+You can currently define a filter using either a String or Regexp (that will then be Regexp-matched against each source file's path),
 a block or by passing in your own Filter class.
 
 #### String filter
@@ -272,6 +286,16 @@ end
 ```
 
 This simple string filter will remove all files that match "/test/" in their path.
+
+#### Regex filter
+
+```ruby
+SimpleCov.start do
+  add_filter %r{^/test/}
+end
+```
+
+This simple regex filter will remove all files that start with /test/ in their path.
 
 #### Block filter
 
@@ -303,6 +327,17 @@ Defining your own filters is pretty easy: Just inherit from SimpleCov::Filter an
 the filter, a true return value from this method will result in the removal of the given source_file. The filter_argument method
 is being set in the SimpleCov::Filter initialize method and thus is set to 5 in this example.
 
+#### Array filter
+
+```ruby
+SimpleCov.start do
+  proc = Proc.new { |source_file| false }
+  add_filter ["string", /regex/, proc, LineFilter.new(5)]
+end
+```
+
+You can pass in an array containing any of the other filter types.
+
 #### Ignoring/skipping code
 
 You can exclude code from the coverage report by wrapping it in `# :nocov:`.
@@ -315,8 +350,7 @@ end
 # :nocov:
 ```
 
-The name of the token can be changed to your liking. [Learn more about the nocov feature.][nocov]
-[nocov]: https://github.com/colszowka/simplecov/blob/master/features/config_nocov_token.feature
+The name of the token can be changed to your liking. [Learn more about the nocov feature.]( https://github.com/colszowka/simplecov/blob/master/features/config_nocov_token.feature)
 
 **Note:** You shouldn't have to use the nocov token to skip private methods that are being included in your coverage. If you appropriately test the public interface of your classes and objects you should automatically get full coverage of your private methods.
 
@@ -432,7 +466,7 @@ You can deactivate merging altogether with `SimpleCov.use_merging false`.
 
 ## Running coverage only on demand
 
-The Ruby STDLIB Coverage library that SimpleCov builds upon is *very* fast (i.e. on a ~10 min Rails test suite, the speed drop was
+The Ruby STDLIB Coverage library that SimpleCov builds upon is *very* fast (on a ~10 min Rails test suite, the speed drop was
 only a couple seconds for me), and therefore it's SimpleCov's policy to just generate coverage every time you run your tests because
 it doesn't do your test speed any harm and you're always equipped with the latest and greatest coverage results.
 
@@ -568,10 +602,10 @@ being an instance of SimpleCov::Result. Do whatever your wish with that!
 As of SimpleCov 0.9, you can specify multiple result formats:
 
 ```ruby
-SimpleCov.formatters = [
+SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
   SimpleCov::Formatter::HTMLFormatter,
   SimpleCov::Formatter::CSVFormatter,
-]
+])
 ```
 
 ## Available formatters, editor integrations and hosted services
@@ -582,14 +616,11 @@ SimpleCov.formatters = [
 
 ## Ruby version compatibility
 
-Only Ruby 1.9+ ships with the coverage library that SimpleCov depends upon.
-SimpleCov is built against various other Rubies, including Rubinius and JRuby,
-in [Continuous Integration], but this happens only to ensure that SimpleCov
-does not make your test suite crash right now. Whether SimpleCov will support
-JRuby/Rubinius in the future depends solely on whether those Ruby interpreters
-add the coverage library.
+Only Ruby 1.9+ ships with the coverage library that SimpleCov depends upon and that's what SimpleCov supports. Additionally JRuby 9.1+ is supported as well, while JRuby 1.7 and 9.0 should work they're not "officially" supported.
+SimpleCov is also built against Ruby 1.8 in [Continuous Integration], but this happens only to ensure that SimpleCov
+does not make your test suite crash right now.
 
-SimpleCov is built in [Continuous Integration] on Ruby 1.9.3, 2.0.0, 2.1, and 2.2.
+SimpleCov is built in [Continuous Integration] on Ruby 1.9.3, 2.0.0, 2.1, 2.2, 2.3, 2.4, 2.5 as well as JRuby 9.1.
 
 ## Want to find dead code in production?
 
@@ -599,11 +630,11 @@ Try [Coverband](https://github.com/danmayer/coverband).
 
 If you're using [Spring](https://github.com/rails/spring) to speed up test suite runs and want to run SimpleCov along with them, you'll find that it often misreports coverage with the default config due to some sort of eager loading issue. Don't despair!
 
-1. Change the following settings in `development.rb` and `test.rb`.
+1. Change the following settings in `test.rb`.
 
     ```ruby
-    # Disable Rails's static asset server (Apache or nginx will already do this)
-    config.serve_static_files = false
+    # For Rails
+    # Do not eager load code on boot
     config.eager_load = false
     ```
 2. Add your SimpleCov config, as you normally would, to your `spec_helper.rb`
@@ -620,6 +651,52 @@ If you're using [Spring](https://github.com/rails/spring) to speed up test suite
 3. Run `spring rspec <path>` as normal. Remember to run `spring stop` after
    making important changes to your app or its specs!
 
+## Want to use bootsnap with SimpleCov?
+
+As mentioned in [this issue](https://github.com/Shopify/bootsnap/issues/35) iseq
+loading/dumping doesn't work with coverage. Hence you need to deactivate it when
+you run coverage so for instance when you use the environment `COVERAGE=true` to
+decide that you want to gather coverage you can do:
+
+```ruby
+Bootsnap.setup(
+  compile_cache_iseq:   !ENV["COVERAGE"], # Compile Ruby code into ISeq cache, breaks coverage reporting.
+  # all those other options
+)
+```
+
+## Troubleshooting
+
+The **most common problem is that simplecov isn't required and started before everything else**. In order to track coverage for your whole application **simplecov needs to be the first one** so that it (and the underlying coverage library) can subsequently track loaded files and their usage.
+
+If you are missing coverage for some code a simple trick is to put a puts statement in there and right after `SimpleCov.start` so you can see if the file really was loaded after simplecov was started.
+
+```ruby
+# my_code.rb
+class MyCode
+
+  puts "MyCode is being loaded!"
+
+  def my_method
+    # ...
+  end
+end
+
+# spec_helper.rb/rails_helper.rb/test_helper.rb/.simplecov whatever
+
+SimpleCov.start
+puts "SimpleCov started successfully!"
+```
+
+Now when you run your test suite and you see:
+
+```
+SimpleCov started successfully!
+MyCode is being loaded!
+```
+
+then it's good otherwise you likely have a problem :)
+
 ## Contributing
 
 See the [contributing guide](https://github.com/colszowka/simplecov/blob/master/CONTRIBUTING.md).
@@ -630,4 +707,4 @@ Thanks to Aaron Patterson for the original idea for this!
 
 ## Copyright
 
-Copyright (c) 2010-2015 Christoph Olszowka. See MIT-LICENSE for details.
+Copyright (c) 2010-2017 Christoph Olszowka. See MIT-LICENSE for details.

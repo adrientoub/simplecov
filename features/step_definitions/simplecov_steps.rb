@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Just a shortcut to make framework setup more readable
 # The test project is using separate config files to avoid specifying all of
 # test/spec_helper in the features every time.
@@ -61,8 +63,12 @@ Then /^the report should be based upon:$/ do |table|
     )
 end
 
-# This is neccessary to ensure timing-dependant tests like the merge timeout
+# This is necessary to ensure timing-dependant tests like the merge timeout
 # do not fail on powerful machines.
 When /^I wait for (\d+) seconds$/ do |seconds|
   sleep seconds.to_i
+end
+
+Then /^the overlay should be open/ do
+  expect(page).to have_css("#cboxContent")
 end
